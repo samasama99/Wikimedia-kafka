@@ -1,0 +1,30 @@
+package org.samasama.wikimedia.producer.stream;
+
+import lombok.extern.slf4j.Slf4j;
+import org.samasama.wikimedia.producer.producer.WikimediaProducer;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Service
+@Slf4j
+public final class WikimediaStreamConsumer {
+    WebClient webClient;
+    WikimediaProducer wikimediaProducer;
+
+    public WikimediaStreamConsumer(WebClient.Builder webClientBuilder,
+                                   WikimediaProducer wikimediaProducer) {
+        this.webClient = WebClient.builder().baseUrl("https://stream.wikimedia.org/v2").build();
+        this.wikimediaProducer = wikimediaProducer;
+    }
+
+
+    public void consumeStreamAndPublish() {
+        webClient
+                .get()
+                .uri("/stream/recentchange")
+                .retrieve()
+                .bodyToFlux(String.class)
+                .subscribe(wikimediaProducer::publish);
+    }
+
+}
